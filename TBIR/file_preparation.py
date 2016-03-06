@@ -20,10 +20,16 @@ def create_output_dataset(input_filename, output_filename, solution_filename):
         ...
         so we will look for all lines that start with : and remove it
         and then for all lines remove d, and store it somwhere?
+
+        v0.2 create as lists as : are, so you can search on them faster when looking at analogies...
+        instead of when finding : skiping, write the category, so we have all
+        organized by cathegories, and we are able to load on smaller lists that are faster to search
     """
     print('creating output and solutions set...')
     output_file = open(output_filename, 'w')
     solution_file = open(solution_filename, 'w')
+    number_category = 1
+    categories = []
     with open(input_filename) as fd:  #filedescriptor C ftw!!!
         for line in fd:
             if line[0] is not ':':
@@ -31,6 +37,15 @@ def create_output_dataset(input_filename, output_filename, solution_filename):
                 output_line = split_line[0] + ' ' + split_line[1] + ' ' + split_line[2] + '\n'
                 output_file.write(str(output_line))
                 solution_file.write(str(split_line[3]))
+            else:
+                category = str(number_category) + line[2:]
+                print category
+                categories.append(category)
+                output_file.write(category)
+                solution_file.write(category)
+                number_category += 1
+
+    return categories
 
 def dataset_preparation(filename=None): #add outputfilename for dataset
     directory_try = False

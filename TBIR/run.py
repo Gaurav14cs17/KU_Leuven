@@ -9,7 +9,7 @@ from analogies_finder import find_analogies
 
 def main(argv):
     print ('TBIR 15-16 Assignemnt')
-    #print argv[0]
+        #print argv[0]
     try:
         prepared_ds_fn, solution_fn = dataset_preparation(argv[0])
     except:
