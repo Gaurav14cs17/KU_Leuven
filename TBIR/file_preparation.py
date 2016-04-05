@@ -1,6 +1,7 @@
 __author__ = 'david_torrejon'
 
 import os.path
+from sys import stdout
 """
 file_preparation module, picks the file questions_words.txt and processes it
 it can be passed through line of command or else by default will try to get it from
@@ -24,6 +25,9 @@ def create_output_dataset(input_filename, output_filename, solution_filename):
         v0.2 create as lists as : are, so you can search on them faster when looking at analogies...
         instead of when finding : skiping, write the category, so we have all
         organized by cathegories, and we are able to load on smaller lists that are faster to search
+
+        TODO... load and smaller dataset just to test it instead of loading everything
+        and then picking few expamples...
     """
     print('creating output and solutions set...')
     output_file = open(output_filename, 'w')
@@ -76,3 +80,46 @@ def dataset_preparation(filename=None): #add outputfilename for dataset
             dataset_preparation()
     finally:
         return output_filename, solution_filename
+
+
+
+def process_line(line):
+    """
+        @params
+        line: list of all tokens contained in a line
+        format: id_img nb_pairs(word, points) w1 p1 w2 p2 .... wn pn
+        return: key, value for the dictionary
+        key: id_img
+        value: list of pairs w-p
+    """
+    key = line[0]
+    nb_pairs = int(line[1])
+    i = 0
+    value = []
+    while i<nb_pairs*2:
+        value.append([line[2+i], int(line[3+i])])
+        i+=2
+
+    assert nb_pairs == len(value), "length of data diferent (nb_pairs =/= len(pairs))"
+    return key, value
+
+
+def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt'):
+    """
+        I dont know... try to open this file and see what to do?
+        return a dictionary where the key is the id from image? the value a list of the pairs word-value
+    """
+    train_data = {}
+    if os.path.isfile(filename):
+        print 'found', filename, 'in directory...'
+        with open(filename) as fd:  #filedescriptor C ftw!!!
+            for i,line in enumerate(fd):
+                k, v = process_line(line.split(" "))
+                train_data[k] = v
+                if i%2000==0:
+                    stdout.write("\rdatapoints loaded %s" % i)
+                    stdout.flush()
+#                raise SystemExit(0)
+            stdout.write("\n")
+
+    return train_data

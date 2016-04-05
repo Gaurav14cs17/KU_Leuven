@@ -24,6 +24,19 @@ def transformation_to_positive(a):
     return a_transformed
 
 
+def get_faster_cosine_similarity(a, b, c, d):
+    """
+    a, b, c are arrays
+    d is a matrix, of ALL D VALUES
+    """
+    a_t = np.reshape(a, (1,-1))
+    b_t = np.reshape(b, (1,-1))
+    c_t = np.reshape(c, (1,-1))
+    sum_result = c_t - a_t + b_t
+    #print sum_result
+    #print d
+    return cosine(d, sum_result)
+
 def get_cosine_similarity(a, b, c, d, similarity_type="multiplication"):
     """
      @params
@@ -39,7 +52,6 @@ def get_cosine_similarity(a, b, c, d, similarity_type="multiplication"):
 
      v0.2 add diferent methos like direction or addition
      for fastest comparations returns the 3 models, instead of goin through the file 3 times....
-
     """
     epsilon = 0.001
 
@@ -130,14 +142,94 @@ def build_outputs_list(filename):
                 category_output = []
             else:
                 category_output.append(output)
-                expected.append(output)
+                expected.append(output.rstrip('\n'))
 
     outputs[category] = category_output
 
     return outputs, expected
 
 
-def find_analogies(input_file, ouptut_file):
+def build_matrix_outputs(glove_model, outputs):
+    """
+        @params:
+        glove_model: dictionary with token: 300d value of its representation
+        outputs: list with all the ouputs tokens to be search in the glove_model
+
+        returns: a numpy matrix of len(ouputs) * len(glove_model[0])
+        a dictionary with each token which row in the matrix
+    """
+    position_dict = {}
+    matrix_outputs = np.zeros((len(outputs),len(glove_model[glove_model.keys()[0]])))
+    position = 0
+    try:
+        for token in outputs:
+            if token in glove_model:
+                #print glove_model[token]
+                matrix_outputs[position] = glove_model[token]
+                position_dict[position] = token
+                position += 1
+            else:
+                print 'token not found???', token
+    except:
+        print 'error with token: ', token
+
+
+    print matrix_outputs.shape
+
+    return matrix_outputs, position_dict
+
+def find_fast_analogies(input_file, output_file):
+
+    seed = 1337 #l33t
+
+    percentage_test = 1 #make this optional or maybe a parameter for the person to decide?
+
+    glove_model = build_glove_dictionary() #returns obviously the glove dictionary
+    possible_outputs_dict, expected_output = build_outputs_list(output_file) #d'
+    outputs_matrix, dictionary_position_matrix = build_matrix_outputs(glove_model, expected_output)
+    #print possible_outputs_dict.keys()
+    analogies_computed = 0
+
+    #line_counter = 0 #this refers to the current output that we are looking for
+    correct_answers = 0
+
+    f = open('./answers.txt', 'w')
+
+    with open(input_file) as fd_inputs:  #
+        for input in fd_inputs:
+            #print input, expected_output[line_counter]
+            test_accepted = False
+            if input[0].isdigit() is False:
+                num = uniform(1.0, 0.0)
+                category_bool = False
+                if num<percentage_test:
+                    test_accepted = True
+                    split_input = input.split(" ")
+                    a, b, c = split_input[0], split_input[1], split_input[2].rstrip('\n')
+                    start = time.time()
+                    if (a in glove_model) and (b in glove_model) and (c in glove_model):
+                        cosine_matrix = get_faster_cosine_similarity(glove_model[a], glove_model[b], glove_model[c], outputs_matrix)
+                        #print cosine_matrix
+                        #raise SystemExit(0)
+                        index_output = np.argmax(cosine_matrix)
+                        #ind = np.argpartition(cosine_matrix, -5)[-5:]
+
+                        #print index_output
+                        if dictionary_position_matrix[index_output] is expected_output[analogies_computed]:
+                            correct_answers+=1
+
+                        num = uniform(1.0, 0.0)
+                        if num < 0.1: # just as a reminder that the sw is not stuck...
+                            print 'trying...', a, b, c
+                            print 'output', dictionary_position_matrix[index_output], 'expected: ', expected_output[analogies_computed]
+                            #print 'acc (so far): ', correct_answers/analogies_computed
+
+                analogies_computed += 1
+
+        print 'acc: ', correct_answers/analogies_computed
+
+
+def find_analogies(input_file, output_file):
 
     """
         build analogy finder?
@@ -155,7 +247,8 @@ def find_analogies(input_file, ouptut_file):
     percentage_test = 0.1 #make this optional or maybe a parameter for the person to decide?
 
     glove_model = build_glove_dictionary() #returns obviously the glove dictionary
-    possible_outputs_dict, expected_output = build_outputs_list(ouptut_file) #d'
+    possible_outputs_dict, expected_output = build_outputs_list(output_file) #d'
+    outputs_matrix, dictionary_position_matrix = build_matrix_outputs(glove_model, expected_output)
     #print possible_outputs_dict.keys()
     analogies_computed = 0
 

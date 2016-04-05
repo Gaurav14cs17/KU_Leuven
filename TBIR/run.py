@@ -4,7 +4,7 @@ import sys
 
 
 from file_preparation import dataset_preparation
-from analogies_finder import find_analogies
+from analogies_finder import find_analogies, find_fast_analogies
 
 
 def main(argv):
@@ -17,7 +17,7 @@ def main(argv):
         prepared_ds_fn, solution_fn =  dataset_preparation()
 
     print('datasets ready...')
-    find_analogies(prepared_ds_fn, solution_fn)
+    find_fast_analogies(prepared_ds_fn, solution_fn)
 
 if __name__ == "__main__":
     main(sys.argv[1:]) # all except the name of the execution
