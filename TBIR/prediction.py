@@ -6,16 +6,24 @@ import operator
 
 class TbirPredict:
 
-    def __init__(self, dictionary):
+    def __init__(self, dictionary, is_dev = False):
         self.dictionary_words = dictionary
+        self.is_dev = is_dev
 
     def predict_img(self, text, nb_imgs=1):
         """
-            should get the text apply something
+            @params
+            text: tokenized processed text
+            nb_images: number of similar images to retrieve, by default 1, the closest one.
             returns: image
         """
-        imgs_directory = './data_6stdpt/Features/Visual/scaleconcepts16_images/'
-        tokens = text.split(" ")
+        if self.is_dev:
+            imgs_directory = './data_6stdpt/DevData/scaleconcept16.teaser_dev_images/'
+            tokens = text
+        else:
+            imgs_directory = './data_6stdpt/Features/Visual/scaleconcepts16_images/'
+            tokens = text.split(" ")
+
         print "predicting img for", tokens
         #image_predicted = Image.open()
         #image_predicted.show()
@@ -36,18 +44,22 @@ class TbirPredict:
                      dict_img_retrieve[key] = curr_val
 
         sorted_dict = sorted(dict_img_retrieve.items(), key=operator.itemgetter(1), reverse=True)
+        print sorted_dict
         #print sorted_dict
         for key in sorted_dict:
-            img = imgs_directory + key[0][0:2].lower() + '/' + key[0] + '.jpg'
+            if self.is_dev:
+                img = imgs_directory  + key[0] + '.jpg'
+            else:
+                img = imgs_directory + key[0][0:2].lower() + '/' + key[0] + '.jpg'
             print self.dictionary_words[key[0]]
             print " "
             if os.path.isdir(imgs_directory):
-            #print 'dir found'
+                print 'dir found'
                 if os.path.isfile(img):
                     #print 'img found'
                     image_predicted = cv2.imread(img)
                     cv2.imshow('img', image_predicted)
                     cv2.waitKey(0)
                 else:
-                    print 'image not found'
+                    print 'image not found', img
         cv2.destroyAllWindows()

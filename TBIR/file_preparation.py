@@ -104,11 +104,13 @@ def process_line(line):
     return key, value
 
 
-def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt'):
+def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt', is_dev = False):
     """
         I dont know... try to open this file and see what to do?
         return a dictionary where the key is the id from image? the value a list of the pairs word-value
     """
+    if is_dev:
+        filename ='./data_6stdpt/DevData/scaleconcept16.teaser_dev_data_textual.scofeat.v20160212'
     train_data = {}
     if os.path.isfile(filename):
         print 'found', filename, 'in directory...'
