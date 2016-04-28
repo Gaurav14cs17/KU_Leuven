@@ -6,6 +6,7 @@ from nltk.tokenize import RegexpTokenizer
 from stop_words import get_stop_words
 from nltk.stem.porter import PorterStemmer
 from gensim import corpora, models, similarities
+from gensim.models import word2vec
 import gensim
 import logging
 import time
@@ -21,6 +22,7 @@ class TbirText:
 
         self.index = ''
         self.tfidf = ''
+        self.model_w2v = ''
         self.is_train = is_train
         self.filepath = filepath
         self.tokenizer = RegexpTokenizer(r'\w+')
@@ -36,13 +38,13 @@ class TbirText:
             self.dictionary = corpora.Dictionary(doc_list)
             self.dictionary.save('train_dict.dict')
         else:
-            self.doc_list, self.file_n_list, self.query_id_list = open_train_file_tfidf(is_train = False, is_test = True)
+            self.doc_list, self.file_n_list, self.query_list, self.query_id_list = open_train_file_tfidf(is_train = True, is_test = True)
             print ""
             if load_dict:
                 self.dictionary=corpora.Dictionary.load('train_dict.dict')
             else:
                 #print doc_list
-                self.dictionary = corpora.Dictionary(self.doc_list)
+                self.dictionary = corpora.Dictionary(self.doc_list + self.query_list)
                 self.dictionary.save('train_dict.dict')
 
         print " "
@@ -186,7 +188,7 @@ class TbirText:
             stdout.write("\rTEST generating tokens for model tfidf: %d " % i)
             stdout.flush()
             #print doc
-            f = ' '.join(self.doc_list[i]).lower()
+            f = ' '.join(self.query_list[i]).lower()
             tokens = self.tokenizer.tokenize(f)
             one_file = [i for i in tokens if not i in self.en_stop]
             bow_doc = self.dictionary.doc2bow(one_file)
@@ -213,7 +215,7 @@ class TbirText:
 
 
 
-        return list_docs_token, self.query_id_list, self.doc_list
+        return list_docs_token, self.query_id_list[batch_sz*iterations_done:batch_sz*iterations_done+batch_sz], self.query_list[batch_sz*iterations_done:batch_sz*iterations_done+batch_sz]
 
 
     def train_model_lsi(self, load_w=True, load_file = './lsi_model_dev.200'):
@@ -252,3 +254,32 @@ class TbirText:
         """
         sci-kit learn look for it!
         """
+        None
+
+
+    def train_model_word2vec(self, load_file = './w2v_model.100', load_w=True):
+
+        if load_w:
+            self.model_w2v = word2vec.Word2Vec.load(load_file)
+        else:
+            #sentences = word2vec.Text8Corpus('./text8')
+            self.model_w2v = word2vec.Word2Vec(self.doc_list+self.query_list, size=300, window=30, min_count=1, workers=4)
+            self.model_w2v.save(load_file)
+        return len(self.query_list)
+
+    def classify_model_word2vec(self, batch_sz=1, iterations_done=0):
+        list_docs_token = []
+        list_files = []
+
+        for i in range(batch_sz*iterations_done, batch_sz*iterations_done+batch_sz):
+            #if i >= 5:
+            #    break
+            stdout.write("\rTEST generating tokens for model word2vec: %d " % i)
+            stdout.flush()
+            #print doc
+            m_similar = self.model_w2v.most_similar(positive=self.query_list[i], negative=[], topn=15) #returns n most similar tokens from the query len(self.query_list[i])
+            #print m_similar
+            best_tokens = [token[0] for token in m_similar]
+            list_docs_token.append(best_tokens)
+
+        return list_docs_token, self.query_id_list[batch_sz*iterations_done:batch_sz*iterations_done+batch_sz], self.query_list[batch_sz*iterations_done:batch_sz*iterations_done+batch_sz]

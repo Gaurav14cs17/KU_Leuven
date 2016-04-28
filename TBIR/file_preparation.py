@@ -3,7 +3,8 @@ __author__ = 'david_torrejon'
 import os.path
 from sys import stdout
 from stop_words import get_stop_words
-
+import numpy as np
+import re
 
 """
 file_preparation module, picks the file questions_words.txt and processes it
@@ -157,6 +158,7 @@ def open_train_file_tfidf(filename = './data_6stdpt/train_data.txt', is_train = 
     docs_list = []
     file_list = []
     query_id_list = []
+    query_list = []
     if is_train:
         if os.path.isfile(filename):
             print 'found', filename, 'in directory...'
@@ -178,11 +180,67 @@ def open_train_file_tfidf(filename = './data_6stdpt/train_data.txt', is_train = 
                 for i,line in enumerate(fd):
                     doc = []
                     file_n, tokens = process_test_line(line.split(" "))
-                    docs_list.append(tokens)
+                    query_list.append(tokens)
                     query_id_list.append(file_n)
                     if i%2000==0:
                         stdout.write("\rdatapoints loaded %s" % i)
                         stdout.flush()
 
 
-    return docs_list, file_list, query_id_list
+    return docs_list, file_list, query_list, query_id_list
+
+def process_line_mymodel(line):
+    """
+        @params
+        line: list of all tokens contained in a line
+        format: id_img nb_pairs(word, points) w1 p1 w2 p2 .... wn pn
+        return: key, value for the dictionary
+        key: id_img
+        value: list of pairs w-p
+        remove stop words?
+    """
+    en_stop = get_stop_words('en')
+    #print en_stop
+    key = line[0]
+    nb_pairs = int(line[1])
+    i = 0
+    value = []
+    weights = {}
+    while i<nb_pairs*2:
+        #print line[2+i]
+        #if line[2+i] not in en_stop:
+        value.append(re.sub(r'[^\x00-\x7f]',r'',line[2+i]))
+        weights[re.sub(r'[^\x00-\x7f]',r'',line[2+i])]=int(line[3+i])
+        i+=2
+
+    #assert nb_pairs == len(value), "length of data diferent (nb_pairs =/= len(pairs))"
+    return key, value, weights
+
+
+def open_train_file_mymodel(dictionary_words_id, filename = './data_6stdpt/train_data.txt'):
+    """
+        returns matrix with nb_samples x len_dictionary. Each position has the WEIGHT of the word
+        dictionary[id]=word
+        also returns the map of id_img row on the matrix
+    """
+    matrix_weights = []
+    idimg_to_row = {}
+    if os.path.isfile(filename):
+        print 'found', filename, 'in directory...'
+        with open(filename) as fd:  #filedescriptor C ftw!!!
+            for i,line in enumerate(fd):
+                stdout.write("\rmatrix weights loaded %s" % i)
+                stdout.flush()
+                row = np.zeros(len(dictionary_words_id))
+                file_n, tokens, weights = process_line_mymodel(line.split(" "))
+                idimg_to_row[i]=file_n
+                ids_to_rows = dictionary_words_id.doc2bow(tokens)
+                word_ids = [dictionary_words_id[id_[0]] for id_ in ids_to_rows]
+                #print weights
+                #print weights['parker']
+                for id_t in ids_to_rows:
+                    row[id_t[0]] = weights[re.sub(r'[^\x00-\x7f]',r'',dictionary_words_id[id_t[0]])]
+                #print row
+                matrix_weights.append(row)
+
+    return np.asarray(matrix_weights, dtype=float), idimg_to_row

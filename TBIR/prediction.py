@@ -60,6 +60,8 @@ class TbirPredict:
         #image_predicted.show()
         #raise SystemExit(0)
         dict_img_retrieve={}
+        max_key = ''
+        max_found = 0
         for key, value in self.dictionary_words.items():
             """
                 this part is really slow
@@ -92,31 +94,39 @@ class TbirPredict:
                     #print pair
             #print curr_val
             if curr_val != 0:
-                curr_val = (curr_val/float(100000))*curr_found/float(curr_val)
-                if len(dict_img_retrieve) < nb_imgs:
+                curr_val=(curr_val/float(100000))
+                curr_val = curr_found*curr_val
+                if len(dict_img_retrieve) < 1:
                     dict_img_retrieve[key] = curr_val
                 else:
                      #print dict_img_retrieve
                      #print curr_val, dict_img_retrieve[min(dict_img_retrieve, key=dict_img_retrieve.get)]
-                     if curr_val > dict_img_retrieve[min(dict_img_retrieve, key=dict_img_retrieve.get)]:
+                     if curr_val > max_found:
+                         max_found = curr_val
+                         max_key = key
+                         #print max_key, key
+                         """
                          del dict_img_retrieve[min(dict_img_retrieve, key=dict_img_retrieve.get)]
                          dict_img_retrieve[key] = curr_val
-
-        sorted_dict = sorted(dict_img_retrieve.items(), key=operator.itemgetter(1), reverse=True)
+                         """
+        #print max_key
+        return max_key
+        #sorted_dict = sorted(dict_img_retrieve.items(), key=operator.itemgetter(1), reverse=True)
 
         #print sorted_dict
+        """
         for key in sorted_dict:
             self.file_output = open(self.filename_output, 'a')
             self.file_output.write(filename_output) #query id
-            self.file_output.write(" ")
+            self.file_output.write(" 0 ")
             if self.is_dev:
                 img = imgs_directory  + key[0] + '.jpg'
             else:
                 img = imgs_directory + key[0][0:2].lower() + '/' + key[0] + '.jpg'
             self.file_output.write(key[0]) #img id
-            self.file_output.write(" ")
+            self.file_output.write(" 0 ")
             self.file_output.write(str(key[1])) #puntuation id
-            self.file_output.write("\n")
+            self.file_output.write(" 0\n")
             print filename_output, key[0], key[1]
             #print self.dictionary_words[key[0]]
             #print " "
@@ -135,3 +145,18 @@ class TbirPredict:
         self.file_output.close()
         cv2.destroyAllWindows()
         #self.file_output.write("\n")
+        """
+
+    def write_file_predictions(self, id_query, img_ids_score):
+        """
+            query_id 0 img_id 0 score 0
+        """
+        self.file_output = open(self.filename_output, 'a')
+        for pair in img_ids_score:
+            self.file_output.write(id_query) #query id
+            self.file_output.write(" 0 ")
+            self.file_output.write(pair[0]) #img id
+            self.file_output.write(" 0 ")
+            self.file_output.write(str(pair[1])) #puntuation id
+            self.file_output.write(" 0\n")
+        self.file_output.close()
