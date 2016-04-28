@@ -2,6 +2,9 @@ __author__ = 'david_torrejon'
 
 import os.path
 from sys import stdout
+from stop_words import get_stop_words
+
+
 """
 file_preparation module, picks the file questions_words.txt and processes it
 it can be passed through line of command or else by default will try to get it from
@@ -91,20 +94,40 @@ def process_line(line):
         return: key, value for the dictionary
         key: id_img
         value: list of pairs w-p
+        remove stop words?
     """
+    en_stop = get_stop_words('en')
+    #print en_stop
     key = line[0]
     nb_pairs = int(line[1])
     i = 0
     value = []
     while i<nb_pairs*2:
+        #print line[2+i]
+        #if line[2+i] not in en_stop:
         value.append([line[2+i], int(line[3+i])])
         i+=2
 
-    assert nb_pairs == len(value), "length of data diferent (nb_pairs =/= len(pairs))"
+    #assert nb_pairs == len(value), "length of data diferent (nb_pairs =/= len(pairs))"
     return key, value
 
+def process_test_line(line):
+    en_stop = get_stop_words('en')
+    """
+       proceses to generate a doc from the line. The weights wont be used this time.
+    """
+    i = 0
+    key = line[0]
+    nb_pairs = int(line[1])
+    value = []
+    while i<nb_pairs*2:
+        value.append(line[2+i])
+        i+=2
+    assert nb_pairs == len(value), "length of data diferent (nb_pairs =/= len(pairs))"
+    #print value
+    return key, value
 
-def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt', is_dev = False):
+def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt', is_dev = False, is_train = False, is_test = True):
     """
         I dont know... try to open this file and see what to do?
         return a dictionary where the key is the id from image? the value a list of the pairs word-value
@@ -116,8 +139,12 @@ def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt',
         print 'found', filename, 'in directory...'
         with open(filename) as fd:  #filedescriptor C ftw!!!
             for i,line in enumerate(fd):
+                #if is_train is False:
                 k, v = process_line(line.split(" "))
                 train_data[k] = v
+                #else:
+                #    k, v = process_test_line(line.split(" "))
+                #    train_data[k] = v
                 if i%2000==0:
                     stdout.write("\rdatapoints loaded %s" % i)
                     stdout.flush()
@@ -125,3 +152,37 @@ def open_train_datatxt(filename='./data_6stdpt/Features/Textual/train_data.txt',
             stdout.write("\n")
 
     return train_data
+
+def open_train_file_tfidf(filename = './data_6stdpt/train_data.txt', is_train = True, is_test = True):
+    docs_list = []
+    file_list = []
+    query_id_list = []
+    if is_train:
+        if os.path.isfile(filename):
+            print 'found', filename, 'in directory...'
+            with open(filename) as fd:  #filedescriptor C ftw!!!
+                for i,line in enumerate(fd):
+                    doc = []
+                    file_n, tokens = process_test_line(line.split(" "))
+                    docs_list.append(tokens)
+                    file_list.append(file_n)
+                    if i%2000==0:
+                        stdout.write("\rdatapoints loaded %s" % i)
+                        stdout.flush()
+        print " "
+    if is_test:
+        filename='./data_6stdpt/test_data_students.txt'
+        if os.path.isfile(filename):
+            print 'found', filename, 'in directory...'
+            with open(filename) as fd:  #filedescriptor C ftw!!!
+                for i,line in enumerate(fd):
+                    doc = []
+                    file_n, tokens = process_test_line(line.split(" "))
+                    docs_list.append(tokens)
+                    query_id_list.append(file_n)
+                    if i%2000==0:
+                        stdout.write("\rdatapoints loaded %s" % i)
+                        stdout.flush()
+
+
+    return docs_list, file_list, query_id_list
