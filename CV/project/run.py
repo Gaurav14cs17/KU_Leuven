@@ -8,6 +8,8 @@ wed:
   numpy array
 thurs:
  @bharath: move pca coord into this xD PCA PCA
+
+We should have this by next wendsday
 """
 
 def PCA():
