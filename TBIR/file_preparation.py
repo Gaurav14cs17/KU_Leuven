@@ -5,6 +5,7 @@ from sys import stdout
 from stop_words import get_stop_words
 import numpy as np
 import re
+import pandas
 
 """
 file_preparation module, picks the file questions_words.txt and processes it
@@ -244,3 +245,67 @@ def open_train_file_mymodel(dictionary_words_id, filename = './data_6stdpt/train
                 matrix_weights.append(row)
 
     return np.asarray(matrix_weights, dtype=float), idimg_to_row
+
+def generate_dataset_inference(filetrain='./data_4stdpt/target_collection', filetest='./data_4stdpt/queries_val', outputfile='./premise_hypo.txt'):
+    train_sentences = []
+    test_sentences = []
+    premises = pandas.read_table(filetrain)
+    hypothesis = pandas.read_table(filetest)
+
+    id_pre = premises['sent_id'].tolist()
+    id_hypo = hypothesis['sent_id'].tolist()
+
+    premises_list = premises['txt_caption'].tolist()
+    hypothesis_list = hypothesis['txt_caption'].tolist()
+    img_pre = premises['img_id'].tolist()
+    img_hyp = hypothesis['img_id'].tolist()
+
+    output = open(outputfile, 'w')
+    lines_written = 0
+    same = 0
+    for hypothesi, id_hyp_img, id_hypo_query in zip(hypothesis_list, img_hyp, id_hypo):
+        for premise, id_pre_img, id_pre_query in zip(premises_list, img_pre, id_pre):
+            if id_hyp_img == id_pre_img:
+                same+=1
+                line_to_write = str(id_hypo_query) + "#&#" + hypothesi + "#&#" + premise + "#&#" + str(id_pre_img) +"#&#" + str(id_pre_query) +"\n"
+            else:
+                line_to_write = str(id_hypo_query) + "#&#" + hypothesi + "#&#" + premise + "#&#" + "wrong" + "#&#" + str(id_pre_query) +"\n"
+            #print line_to_write
+            output.write(line_to_write)
+            lines_written+=1
+        #raise SystemExit(0)
+    print lines_written, same, len(set(img_hyp)), len(set(img_pre))
+
+
+def test_dataset_inference(outputfile='./premise_hypo.txt'):
+    entailments = 0
+    with open(outputfile) as fd:  #filedescriptor C ftw!!!
+        for line in fd:
+            t_data = line.rstrip().split("#&#")
+            print t_data
+            raise SystemExit(0)
+            if 'entailment' in t_data:
+                entailments+=1
+    print entailments
+
+
+
+def generate_dataset(filetrain='./data_4stdpt/target_collection', filetest='./data_4stdpt/queries_val', outputfile='./premise_hypo.txt'):
+    train_sentences = []
+    test_sentences = []
+
+    premises = pandas.read_table(filetrain)
+    hypothesis = pandas.read_table(filetest)
+    id_pre = premises['sent_id'].tolist()
+    id_hypo = hypothesis['sent_id'].tolist()
+    premises_list = premises['txt_caption'].tolist()
+    hypothesis_list = hypothesis['txt_caption'].tolist()
+    img_pre = premises['img_id'].tolist()
+    img_hyp = hypothesis['img_id'].tolist()
+
+    for hypothesi, id_hyp_img, id_hypo_query in zip(hypothesis_list, img_hyp, id_hypo):
+        test_sentences.append([id_hypo_query, id_hyp_img, hypothesi])
+    for premise, id_pre_img, id_pre_query in zip(premises_list, img_pre, id_pre):
+        train_sentences.append([id_pre_query, id_pre_img, premise])
+
+    return train_sentences, test_sentences

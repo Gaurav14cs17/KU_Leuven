@@ -263,7 +263,7 @@ class TbirText:
             self.model_w2v = word2vec.Word2Vec.load(load_file)
         else:
             #sentences = word2vec.Text8Corpus('./text8')
-            self.model_w2v = word2vec.Word2Vec(self.doc_list+self.query_list, size=300, window=30, min_count=1, workers=4)
+            self.model_w2v = word2vec.Word2Vec(self.doc_list+self.query_list, size=200, window=15, min_count=1, workers=4)
             self.model_w2v.save(load_file)
         return len(self.query_list)
 
@@ -277,7 +277,7 @@ class TbirText:
             stdout.write("\rTEST generating tokens for model word2vec: %d " % i)
             stdout.flush()
             #print doc
-            m_similar = self.model_w2v.most_similar(positive=self.query_list[i], negative=[], topn=15) #returns n most similar tokens from the query len(self.query_list[i])
+            m_similar = self.model_w2v.most_similar(positive=self.query_list[i], negative=[], topn=20) #returns n most similar tokens from the query len(self.query_list[i])
             #print m_similar
             best_tokens = [token[0] for token in m_similar]
             list_docs_token.append(best_tokens)
