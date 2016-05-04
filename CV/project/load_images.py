@@ -12,6 +12,7 @@ def load_images(landmarks, path='./Project Data(2)/_Data/Radiographs/'):
     """
         shows an img, and its corresponding landmarks
     """
+    img_landmark = {}
     if os.path.isdir(path):
         for filename in os.listdir(path):
             filepath = path+filename
@@ -24,6 +25,8 @@ def load_images(landmarks, path='./Project Data(2)/_Data/Radiographs/'):
                     pts = np.array(l, np.int32)
                     pts = pts.reshape((-1,1,2))
                     cv2.polylines(im,[pts],True,(0,255,255))
+                img_landmark[str(radiography_nb)] = im
                 cv2.imshow(filename, im)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
+    return img_landmark
