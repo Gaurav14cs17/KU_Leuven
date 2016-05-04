@@ -1,6 +1,8 @@
 __author__ = 'david_torrejon & Bharath Venkatesh'
 
 
+from load_files import load_landmarks
+
 """
 Schedule:
 wed:
@@ -8,11 +10,8 @@ wed:
   numpy array
 thurs:
  @bharath: move pca coord into this xD PCA PCA
-
 We should have this by next wendsday
 """
 
-def PCA():
-  print "PCA"*5
-  
-PCA()
+landmarks = load_landmarks()
+print landmarks.shape
