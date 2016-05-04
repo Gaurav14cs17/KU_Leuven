@@ -2,6 +2,7 @@ __author__ = 'david_torrejon & Bharath Venkatesh'
 
 
 from load_files import load_landmarks
+from load_images import load_images
 
 """
 Schedule:
@@ -14,4 +15,4 @@ We should have this by next wendsday
 """
 
 landmarks = load_landmarks()
-print landmarks.shape
+load_images(landmarks)
