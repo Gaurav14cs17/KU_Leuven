@@ -1,10 +1,9 @@
 __author__ = 'david_torrejon & Bharath Venkatesh'
-
 import os
 import numpy as np
 import string
 
-def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/'):
+def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/',mirrored=False):
     """
     x1
     y1
@@ -24,6 +23,8 @@ def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/'):
             filepath = path+filename
             name = filename.split("-")[0]
             key = name.translate(all_, nodigs)
+            if mirrored:
+                key=str(int(key)-14)
             #print key
             if key not in landmarks.keys():
                 landmarks[key] = []
@@ -42,5 +43,5 @@ def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/'):
                 #print landmarks
                 landmarks[key].append(np.asarray(landmarks_file))
                 #print landmarks[key]
-    print landmarks.keys()
+    #print landmarks.keys()
     return landmarks
