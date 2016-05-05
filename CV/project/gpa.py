@@ -15,11 +15,16 @@ def centerShape(l):
     mu=numpy.mean(l,axis=0)
     return l-mu,mu
 
-def alignLandmarks(l1,l2):
+def alignShapes(l1,l2):
     '''
     Aligning Two CENTERED (Mean 0) Landmarks
     Returns the scaling factor s and the rotation matrix A
     such that |sAx1-x2| is minimized.
+    
+    See Appendix D of 
+    Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
+    Image processing and analysis (2000): 223-248.
+    
     This is implemented using the Kabasch algorithm for simplicity
     https://en.wikipedia.org/wiki/Kabsch_algorithm
 
@@ -33,12 +38,17 @@ def alignLandmarks(l1,l2):
     #R=V.T*np.matrix('1 0 ; 0 d')*U.T
     A=V.T*U.T
     s= np.trace(S)*(norm2/norm1)
-    return s,A
+    return s,A,s*np.dot(A,x1)
     
 
 def gpa(X)
     '''
     Generalized Procustes Analysis, returns X and the mean with all points rotated and scaled 
+    
+    See Appendix A of 
+    Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
+    Image processing and analysis (2000): 223-248.
+    
     to be in the same coordinate system
     1. Translate each example so that its centre of gravity is at the origin.
     2. Choose one example as an initial estimate of the mean shape and scale so that |x| = sqrt(x1^2+x2^2..)=1 
