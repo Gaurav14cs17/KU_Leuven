@@ -41,7 +41,7 @@ def alignShapes(l1,l2):
     return s,A,s*np.dot(A,x1)
     
 
-def gpa(X)
+def gpa(X):
     '''
     Generalized Procustes Analysis, returns X and the mean with all points rotated and scaled 
     
