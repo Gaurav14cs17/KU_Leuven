@@ -1,6 +1,13 @@
 import math
 import numpy as np
 
+def plotShapes(shapes):
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    for points in shapes:
+        xlist,ylist=zip(*(points))
+        ax.plot(xlist,ylist)
+
 def normalizeShape(l):
     '''
     Normalizes the array of landmarks and returns the norm
@@ -12,15 +19,13 @@ def centerShape(l):
     '''
     Centers the array of landmarks by subtracting the mean and returns the mean
     '''
-    mu=numpy.mean(l,axis=0)
+    mu=np.mean(l,axis=0)
     return l-mu,mu
 
 def alignShapes(l1,l2):
     '''
     Aligning Two CENTERED (Mean 0) Landmarks
-    Returns the scaling factor s and the rotation matrix A
-    such that |sAx1-x2| is minimized.
-    
+    Returns the matrix A that minimizes |Ax1-x2|
     See Appendix D of 
     Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
     Image processing and analysis (2000): 223-248.
@@ -29,27 +34,20 @@ def alignShapes(l1,l2):
     https://en.wikipedia.org/wiki/Kabsch_algorithm
 
     '''
-    nl1,norm1=normalizeShape(l1)
-    nl2,norm1=normalizeShape(l2)
-    C=np.dot(nl1.T,nl2)
-    U,S,V=numpy.linalg.svd(C)
-    #Wiki suggests
-    #d=numpy.linalg.det(np.dot(V.T,U))
-    #R=V.T*np.matrix('1 0 ; 0 d')*U.T
-    A=V.T*U.T
-    s= np.trace(S)*(norm2/norm1)
-    return s,A,s*np.dot(A,x1)
+    C=np.dot(l1.T,l2)
+    U,S,V=np.linalg.svd(C)
+    A=np.dot(U,V)
+    return A,np.dot(l1,A)
     
 
 def gpa(X):
     '''
     Generalized Procustes Analysis, returns X and the mean with all points rotated and scaled 
-    
+    to be in the same coordinate system
     See Appendix A of 
     Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
     Image processing and analysis (2000): 223-248.
-    
-    to be in the same coordinate system
+      
     1. Translate each example so that its centre of gravity is at the origin.
     2. Choose one example as an initial estimate of the mean shape and scale so that |x| = sqrt(x1^2+x2^2..)=1 
     3. Record the first estimate as x0 to define the default orientation.
@@ -60,4 +58,4 @@ def gpa(X):
     7. If not converged, return to 4.
        (Convergence is declared if the estimate of the mean does not change significantly after an iteration)
     '''
-    return Xsr,x0
+    return Xsr,mu
