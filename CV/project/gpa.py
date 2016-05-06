@@ -31,28 +31,35 @@ def centerAndScaleShape(l):
     ncl,norm=normalizeShape(cl)
     return ncl,mu,norm
 
-def alignShapes(l1,l2):
+def alignAtoBProcrustes(A,B):
     '''
-    Aligning Two CENTERED (Mean 0) Landmarks
-    Returns the matrix A and scaling factor s and the rotated and scaled matrix sAx1 that minimizes |sx1A-x2|
+    Compute parameters to optimally align Two CENTERED (Mean 0) and SCALED (Unit norm) shapes A,B
+    Returns rotated and scaled matrix Rx1 that minimizes |x1R-x2| (least squares)
     See Appendix D of 
     Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
     Image processing and analysis (2000): 223-248.
     
-    This is implemented using the Kabasch algorithm for simplicity
-    https://en.wikipedia.org/wiki/Kabsch_algorithm
+    Derivation T- transpose I - inverse PI -pseudoinverse
+    x1*R=x2
+    T(x2)*x1*R=T(x2)*x2 
+    Let C = T(x2)*x1
+    R=I(C)T(x2)*x2
+    For least squares fit find pseudoinverse of I using svd write C=U*S*T(V) then
+    PI(C)=V*I(S)*T(U)
+    R=V*I(S)*T(U)
 
     '''
-    C=np.dot(l1.T,l2)
-    U,S,V=np.linalg.svd(C)
-    A=np.dot(U,V)
-    s=S.sum()
-    return A,s,s*np.dot(l1,A)
-    
+    C=np.dot(B.T,A)
+    BTB=np.dot(B.T,B)
+    U,s,V=np.linalg.svd(C)
+    Sinv=np.diag(np.reciprocal(s))
+    PIC=np.dot(np.dot(V.T,Sinv),U.T)
+    R=np.dot(PIC,BTB)
+    return np.dot(A,R),R 
 
-def gpa(X):
+def gpa(shapes,tol=1e-5):
     '''
-    Generalized Procustes Analysis, returns X and the mean with all points rotated and scaled 
+    Generalized Procustes Analysis, returns the rotated scales and shapes and the mean with all points rotated and scaled 
     to be in the same coordinate system
     See Appendix A of 
     Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
@@ -68,4 +75,19 @@ def gpa(X):
     7. If not converged, return to 4.
        (Convergence is declared if the estimate of the mean does not change significantly after an iteration)
     '''
-    return Xsr,mu
+    X=np.array(shapes)
+    [N,l,u]=X.shape
+    for i in range(N):
+        X[i,:,:],_=centerShape(X[i,:,:])
+    [N,l,u]=X.shape
+    currmux0=X[0,:,:]
+    lastmux0 = currmux0
+    t=0
+    while(t==0 or np.linalg.norm(currmux0-lastmux0) > tol):
+        for i in range(N):
+            cshape,_=centerShape(X[i,:,:])
+            X[i,:,:],_=alignAtoBProcrustes(cshape,currmux0)
+        lastmux0=currmux0
+        currmux0,_,_=centerAndScaleShape(np.mean(X,axis=0))
+        t = t+1
+    return X.tolist(),currmux0,t

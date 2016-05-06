@@ -18,7 +18,7 @@ def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/',mirrored=F
     ...
     xn
     yn
-    returns a numpy matrix of shape (nb_docs, nb_points, 2)
+    returns a list of list of shapes (nb_docs, nb_points, 2)
     """
     all_=string.maketrans('','')
     nodigs=all_.translate(all_, string.digits)
@@ -51,7 +51,7 @@ def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/',mirrored=F
 
                 tmp = landmarks[key]
                 #print landmarks
-                landmarks[key].append(np.asarray(landmarks_file))
+                landmarks[key].append(landmarks_file)
                 #print landmarks[key]
     #print landmarks.keys()
     #Reordering each landmark list
