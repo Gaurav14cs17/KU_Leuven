@@ -12,7 +12,7 @@ def normalizeShape(l):
     '''
     Normalizes the array of landmarks and returns the norm
     '''
-    norm=np.sqrt(np.sum(np.square(l),axis=0))
+    norm=np.linalg.norm(l)
     return l/norm,norm
 
 def centerShape(l):
@@ -22,10 +22,19 @@ def centerShape(l):
     mu=np.mean(l,axis=0)
     return l-mu,mu
 
+def centerAndScaleShape(l):
+    '''
+    Centers the array of landmarks by subtracting the mean and returns the mean and
+    scales, returning the centered and scaled vector , the mean and the norm
+    '''
+    cl,mu=centerShape(l)
+    ncl,norm=normalizeShape(cl)
+    return ncl,mu,norm
+
 def alignShapes(l1,l2):
     '''
     Aligning Two CENTERED (Mean 0) Landmarks
-    Returns the matrix A that minimizes |Ax1-x2|
+    Returns the matrix A and scaling factor s and the rotated and scaled matrix sAx1 that minimizes |sx1A-x2|
     See Appendix D of 
     Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
     Image processing and analysis (2000): 223-248.
@@ -37,7 +46,8 @@ def alignShapes(l1,l2):
     C=np.dot(l1.T,l2)
     U,S,V=np.linalg.svd(C)
     A=np.dot(U,V)
-    return A,np.dot(l1,A)
+    s=S.sum()
+    return A,s,s*np.dot(l1,A)
     
 
 def gpa(X):
