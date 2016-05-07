@@ -1,6 +1,7 @@
 import numpy as np
 import bisect
 
+
 def project(W, X, mu):
     '''
     Project X on the space spanned by the vectors in W.
@@ -18,6 +19,9 @@ def eigop(X):
     '''
     Do the eigendecomposition of the matrix XX' or X'X depending on the shape of the matrix
     and return ALL the eigenvectors and eigenvalues 
+    See Appendix E of 
+    Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
+    Image processing and analysis (2000): 223-248.
     '''
     [n,d] = X.shape
     if n>d:
@@ -25,7 +29,7 @@ def eigop(X):
         [l,W] = np.linalg.eigh(C)
     else:
         C = np.dot(X,X.T)
-        [l,W] = np.linalg.eigh(C)
+        [l,eigenvectors] = np.linalg.eigh(C)
         W = np.dot(X.T,eigenvectors)
         for i in xrange(n):
             W[:,i] =W[:,i]/np.linalg.norm(W[:,i])
@@ -40,7 +44,7 @@ def pcaN(X,k):
     '''
     mu = X.mean(axis=0)
     lall,Wall=eigop(X - mu)
-    return l[1:k],W[:,1:k],mu
+    return lall[1:k],Wall[:,1:k],mu
     
 def pcaV(X,varianceFraction=0.9):
     '''
@@ -51,4 +55,4 @@ def pcaV(X,varianceFraction=0.9):
     lall,Wall=eigop(X - mu)
     varfrac = np.cumsum(lall/np.sum(lall))
     k=bisect.bisect_right(varfrac,varianceFraction)
-    return l[1:k],W[:,1:k],mu
+    return lall[1:k],Wall[:,1:k],mu

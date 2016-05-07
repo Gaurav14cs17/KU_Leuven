@@ -4,6 +4,13 @@ import numpy as np
 import string
 
 def extractLandmarksForIncisorByIndex(landmarks,index):
+    '''
+    This function accepts landmarks as a dictionary
+    indexed by radiogram number containing a list of list of points (check load_landmarks())
+    For a given incisor index in [0,7] get a list of lists of all 
+    landmarks for that incisor corresponding to each radiogram
+
+    '''
     shapes=[]
     for key in landmarks.keys():
         shapes.append(landmarks[key][index])
