@@ -7,19 +7,14 @@
 
 # ## Jupyter Magics
 
-# In[94]:
+# In[178]:
 
 get_ipython().magic(u'matplotlib inline')
-import matplotlib.pyplot as plt
-import cv2
-def show(img):
-    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    
 
 
 # ## load_landmarks.py - Load Landmarks
 
-# In[95]:
+# In[179]:
 
 __author__ = 'david_torrejon & Bharath Venkatesh'
 import os
@@ -27,6 +22,13 @@ import numpy as np
 import string
 
 def extractLandmarksForIncisorByIndex(landmarks,index):
+    '''
+    This function accepts landmarks as a dictionary
+    indexed by radiogram number containing a list of list of points (check load_landmarks())
+    For a given incisor index in [0,7] get a list of lists of all 
+    landmarks for that incisor corresponding to each radiogram
+
+    '''
     shapes=[]
     for key in landmarks.keys():
         shapes.append(landmarks[key][index])
@@ -88,7 +90,7 @@ def load_landmarks(path='./Project Data(2)/_Data/Landmarks/original/',mirrored=F
 
 # ## load_images.py - Load Images
 
-# In[96]:
+# In[180]:
 
 __author__ = 'david_torrejon & Bharath Venkatesh'
 
@@ -126,18 +128,21 @@ def load_images(landmarks, path='./Project Data(2)/_Data/Radiographs/'):
     return img_landmark, np.asarray(matrix_images)
 
 
-# ## gpa.py - Do generalized procrustes analyses
-# See Appendix D Appendix D Aligning Two Shapes and Appendix A - Aligning the Training Set, pg 21 of
-# Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
-# Image processing and analysis (2000): 223-248.
-# 
+# ## shape_utils.py - Common functions for shape handling
 
-# In[97]:
+# In[181]:
 
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+def show(img):
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
 
 def plotShapes(shapes):
+    '''
+    Utility to plot a list of shapes
+    '''
     fig = plt.figure()
     ax = fig.add_subplot(111)
     for points in shapes:
@@ -146,26 +151,38 @@ def plotShapes(shapes):
 
 def normalizeShape(l):
     '''
-    Normalizes the array of landmarks and returns the norm
+    Normalizes the shape and also returns the norm
     '''
     norm=np.linalg.norm(l)
     return l/norm,norm
 
 def centerShape(l):
     '''
-    Centers the array of landmarks by subtracting the mean and returns the mean
+    Centers the shape by subtracting the mean and  also returns the mean
     '''
     mu=np.mean(l,axis=0)
     return l-mu,mu
 
 def centerAndScaleShape(l):
     '''
-    Centers the array of landmarks by subtracting the mean and returns the mean and
-    scales, returning the centered and scaled vector , the mean and the norm
+    Centers the shape and scales it calling center and normalize
+    also returns the mean and the norm
     '''
     cl,mu=centerShape(l)
     ncl,norm=normalizeShape(cl)
     return ncl,mu,norm
+
+
+# ## gpa.py - Do generalized procrustes analyses
+# See Appendix D Appendix D Aligning Two Shapes and Appendix A - Aligning the Training Set, pg 21 of
+# Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
+# Image processing and analysis (2000): 223-248.
+# 
+
+# In[182]:
+
+import math
+import numpy as np
 
 def alignAtoBProcrustes(A,B):
     '''
@@ -231,7 +248,7 @@ def gpa(shapes,tol=1e-5):
 
 # ## pca.py - Do principal component analysis
 
-# In[98]:
+# In[183]:
 
 import numpy as np
 import bisect
@@ -260,7 +277,7 @@ def eigop(X):
         [l,W] = np.linalg.eigh(C)
     else:
         C = np.dot(X,X.T)
-        [l,W] = np.linalg.eigh(C)
+        [l,eigenvectors] = np.linalg.eigh(C)
         W = np.dot(X.T,eigenvectors)
         for i in xrange(n):
             W[:,i] =W[:,i]/np.linalg.norm(W[:,i])
@@ -275,7 +292,7 @@ def pcaN(X,k):
     '''
     mu = X.mean(axis=0)
     lall,Wall=eigop(X - mu)
-    return l[1:k],W[:,1:k],mu
+    return lall[1:k],Wall[:,1:k],mu
     
 def pcaV(X,varianceFraction=0.9):
     '''
@@ -286,12 +303,49 @@ def pcaV(X,varianceFraction=0.9):
     lall,Wall=eigop(X - mu)
     varfrac = np.cumsum(lall/np.sum(lall))
     k=bisect.bisect_right(varfrac,varianceFraction)
-    return l[1:k],W[:,1:k],mu
+    return lall[1:k],Wall[:,1:k],mu
+
+
+# ## toothmodel.py - Shape model for a tooth
+
+# In[184]:
+
+import numpy as np
+
+def prePCA(shapes):
+    '''
+    Runs gpa on the shapes and builds a feature vector for PCA
+    '''
+    newshapes,_,_=gpa(shapes)
+    xvectors=[]
+    for shape in newshapes:
+        xvectors.append(np.reshape(np.array(shape),2*len(shape)).tolist())
+    return np.array(xvectors)
+
+class ASM:
+
+
+    def __init__(self,shapes):
+        self.X=prePCA(shapes)
+    
+    def fit(self,varfrac):
+        self.lambdas,self.P,self.mu=pcaV(X,varfrac)
+    
+    
+        
+    
+        
+
+
+        
+    
+    
+def shapeModel(l,W,mu)    
 
 
 # ## Reading Radiograms, Segmentation and Landmarks
 
-# In[99]:
+# In[185]:
 
 landmarks=load_landmarks(path='/home/bharath/workspace/CV/Project/data/Landmarks/original/')
 mirrored_landmarks=load_landmarks(path='/home/bharath/workspace/CV/Project/data/Landmarks/mirrored/',mirrored=True)
@@ -301,7 +355,7 @@ images,data=load_images(landmarks,path='/home/bharath/workspace/CV/Project/data/
 
 # ## Scratch
 
-# In[100]:
+# In[186]:
 
 #show(images['1'])
 #for index in range(8):
@@ -311,17 +365,31 @@ images,data=load_images(landmarks,path='/home/bharath/workspace/CV/Project/data/
 #        cshape,mu=centerShape(shape)
 #        centeredShapes.append(cshape)
 #    plotShapes(centeredShapes)
-shapes=extractLandmarksForIncisorByIndex(landmarks,3)
-cshapes=[]
-for shape in shapes:
-    cshape,_=centerShape(shape)
-    cshapes.append(cshape)
-plotShapes(cshapes)
-ashape,_=alignAtoBProcrustes(cshapes[6],cshapes[1])
-plotShapes([cshapes[6],cshapes[1]])
-plotShapes([ashape,cshapes[1]])
-newshapes,meanShape,t=gpa(shapes)
-print t
-plotShapes([meanShape])
-plotShapes(newshapes)
+#shapes=extractLandmarksForIncisorByIndex(landmarks,3)
+#cshapes=[]
+#for shape in shapes:
+#    cshape,_=centerShape(shape)
+#    cshapes.append(cshape)
+#plotShapes(cshapes)
+#ashape,_=alignAtoBProcrustes(cshapes[6],cshapes[1])
+#plotShapes([cshapes[6],cshapes[1]])
+#plotShapes([ashape,cshapes[1]])
+#newshapes,meanShape,t=gpa(shapes)
+#plotShapes([meanShape])
+#plotShapes(newshapes)
+ashapemat=[]
+ashapemean=[]
+for i in range(8):
+    shapes=extractLandmarksForIncisorByIndex(landmarks,i)
+    newshapes,meanShape,t=gpa(shapes)
+    print 'Completed gpa of incisor ' + str(i) + ' in ' + str(t) + ' iterations '
+    plotShapes([meanShape])
+    ashapemat.append(newshapes)
+    ashapemean.append(meanShape)
+    X=prePCA(shapes)
+    l,W,mu=pcaV(X,0.9)
+    print l
+    
+    
+    
 
