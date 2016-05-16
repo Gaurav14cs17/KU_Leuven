@@ -56,5 +56,8 @@ for i in range(8):
     #print l
     model = ASM(shapes,0.9)
     print model.getLambdas()
-    plotShapes([model.getMeanShape(),model.generateRandomShape(),model.generateRandomShape(),model.generateRandomShape()])   
+    modes=model.getModes()
+    for j in range(len(model.getLambdas())):
+        plotShapes(modes[j])   
+    
     

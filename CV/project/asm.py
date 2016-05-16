@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from shape_utils import *
 from gpa import gpa
 from pca import pcaV
@@ -33,6 +34,23 @@ class ASM:
         '''
         return convertShapeVectorIntoShape(self.mu)
     
+    def getShape(self,factors):
+        b=np.multiply(factors,3*np.sqrt(self.lambdas))
+        return convertShapeVectorIntoShape(self.mu-np.dot(self.P,b))   
+    
+    def getModes(self):
+        shapeListList=[]
+        for i in range(len(self.lambdas)):
+            shapeList = []
+            for j in range(-3,4):
+                factors = np.zeros(self.lambdas.shape)
+                factors[i]=j
+                shapeList.append(self.getShape(factors))
+            shapeListList.append(shapeList)
+        return shapeListList
+            
+            
+    
     def generateRandomShape(self):
         '''
         Returns a random n shape generated from the model for visualization
@@ -40,6 +58,5 @@ class ASM:
         Cootes, Tim, E. R. Baldock, and J. Graham. "An introduction to active shape models." 
         Image processing and analysis (2000): 223-248.
         '''
-        factors = np.random.uniform(-1, 1, size=self.lambdas.shape)
-        b=np.multiply(factors,3*self.lambdas)
-        return convertShapeVectorIntoShape(self.mu-np.dot(self.P,b))     
+        return(self.getShape(np.random.uniform(-1, 1, size=self.lambdas.shape)))
+          

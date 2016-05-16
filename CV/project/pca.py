@@ -55,4 +55,4 @@ def pcaV(X,varianceFraction=0.9):
     lall,Wall=eigop(X - mu)
     varfrac = np.cumsum(lall/np.sum(lall))
     k=bisect.bisect_right(varfrac,varianceFraction)
-    return lall[1:k],Wall[:,1:k],mu
+    return lall[0:k],Wall[:,0:k],mu
