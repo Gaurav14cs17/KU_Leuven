@@ -34,7 +34,7 @@ class ActiveShapeModel:
         self._aligned_shapes = AlignedShapeList(shapes, gpa_tol, gpa_max_iters)
         self._model = PCAModel(self._aligned_shapes.raw())
         self._modes = self._model.k_cutoff(pca_variance_captured)
-        self._b_max = 3 * self._model.eigenvalues()[0:self._modes] ** 0.5
+        self._b_max = 3 * ((self._model.eigenvalues()[0:self._modes]) ** 0.5)
 
     def aligned_shapes(self):
         return self._aligned_shapes.shapes()

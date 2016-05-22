@@ -159,7 +159,7 @@ class AlignedShapeList:
                  mean_shape The mean shape of the given list
         """
         self._aligned_shapes = [shape.center() for shape in shapes]
-        self._mean_shape = self._aligned_shapes[0]
+        self._mean_shape = self._aligned_shapes[0].normalize()
         for num_iters in range(max_iters):
             for i in range(len(self._aligned_shapes)):
                 self._aligned_shapes[i] = self._aligned_shapes[i].align(self._mean_shape)
