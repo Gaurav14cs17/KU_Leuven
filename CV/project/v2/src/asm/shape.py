@@ -141,6 +141,8 @@ class Shape:
             return self._data[point_index]
         return np.array([])
 
+    def pyrDown(self):
+        return Shape(np.round(self.raw()/2))
 
 class AlignedShapeList:
     """
