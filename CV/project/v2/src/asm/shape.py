@@ -52,7 +52,7 @@ class Shape:
         Returns the mean point of the shape points
         :return: The d-dimensional mean vector of the shape
         """
-        return np.mean(self._data,axis=0)
+        return np.mean(self._data, axis=0)
 
     def norm(self):
         """
@@ -81,7 +81,7 @@ class Shape:
         :return: The number of points in the shape
         """
         r, _ = self._data.shape
-        return len(r)
+        return r
 
     def center(self):
         """
@@ -128,6 +128,18 @@ class Shape:
 
     def add(self, other):
         return Shape(np.concatenate((self._data, other.raw())))
+
+    def get_neighborhood(self, point_index, num_neighbors):
+        if 0 <= point_index < self.size():
+            neighborhood_index_increments = range(-num_neighbors, 0, 1) + range(1, num_neighbors + 1, 1)
+            neighborhood_indices = [(point_index + incr) % self.size() for incr in neighborhood_index_increments]
+            return np.array([self._data[index] for index in neighborhood_indices])
+        return np.array([])
+
+    def get_point(self, point_index):
+        if 0 <= point_index < self.size():
+            return self._data[point_index]
+        return np.array([])
 
 
 class AlignedShapeList:

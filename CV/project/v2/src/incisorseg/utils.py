@@ -21,3 +21,9 @@ def overlay_shapes_on_image(img, shapes):
     im = img.copy()
     cv2.polylines(im, np.int32([shape.raw() for shape in shapes]), True, (0, 255, 255))
     return im
+
+def overlay_points_on_image(img,points):
+    im = img.copy()
+    for point in points:
+        cv2.circle(im,(point[1],point[0]),1,(0,255,255),1)
+    return im
