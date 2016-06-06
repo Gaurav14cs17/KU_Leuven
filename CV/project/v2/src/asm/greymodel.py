@@ -20,6 +20,9 @@ class GreyModel:
 
     """
 
+    def size(self):
+        return len(self._models)
+
     def _get_point_normal_pixel_coordinates(self, shape, point_index):
         """
         Get the coordinates of pixels lying on the normal of the point
@@ -36,7 +39,7 @@ class GreyModel:
 
     def _get_normal_grey_levels_for_single_point_single_image(self, image, shape, point_index):
         coordinate_list = self._get_point_normal_pixel_coordinates(shape, point_index)
-        data = np.zeros((2 * self._number_of_pixels + 1, 1), dtype=float)
+        data = np.zeros((2 * self._number_of_pixels + 1,), dtype=float)
         ctr = 0
         h, w = image.shape
         for coordinates in coordinate_list:
@@ -65,7 +68,7 @@ class GreyModel:
         Returns the modal grey levels of the model (Variance limits)
         :param m: A list of vectors containing the modal greys
         """
-        if m < 0 or m >= self.modes():
+        if m < 0 or m >= self._models[point_index].modes():
             raise ValueError('Number of modes must be within [0,modes()-1]')
         factors = np.zeros(self._models[point_index].modes())
         mode_greys = []
@@ -74,12 +77,16 @@ class GreyModel:
             mode_greys.append(self.generate_grey(point_index,factors))
         return mode_greys
 
-    def __init__(self, images, shapes, number_of_pixels=5, pca_variance_captured=0.9, normal_point_neighborhood=4):
+    def __init__(self, images, shapes, number_of_pixels=5, pca_variance_captured=0.9, normal_point_neighborhood=4,use_gradient=False):
         self._normal_neighborhood = normal_point_neighborhood
         self._number_of_pixels = number_of_pixels
         self._models = []
         for i in range(shapes[0].size()):
             plist = []
             for j in range(len(images)):
-                plist.append(self._get_normal_grey_levels_for_single_point_single_image(images[j], shapes[j], i))
-            self._models.append(ModedPCAModel(np.array(plist), pca_variance_captured))
+                levels = self._get_normal_grey_levels_for_single_point_single_image(images[j], shapes[j], i)
+                if use_gradient:
+                    pdata = np.diff(levels)
+                plist.append(levels)
+            pdata=np.array(plist)
+            self._models.append(ModedPCAModel(pdata, pca_variance_captured))
