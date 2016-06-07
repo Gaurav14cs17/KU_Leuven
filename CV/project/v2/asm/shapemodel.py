@@ -1,6 +1,6 @@
 import numpy as np
 
-from asm.pca import PCAModel
+from asm.pca import ModedPCAModel
 from asm.shape import AlignedShapeList, Shape
 
 
@@ -13,9 +13,7 @@ class ActiveShapeModel:
     Attributes:
     _aligned_shapes An AlignedShapeList containing
     the training shapes
-    _model  The underlying PCA Model
-    _modes The number of modes of the model
-    _bmax The limits of variation of the shape model
+    _model  The underlying modedPCA Model
 
     Authors: David Torrejon and Bharath Venkatesh
 
@@ -32,11 +30,13 @@ class ActiveShapeModel:
         permitted for gpa (Default: 10000)
         """
         self._aligned_shapes = AlignedShapeList(shapes, gpa_tol, gpa_max_iters)
-        self._model = PCAModel(self._aligned_shapes.raw())
-        self._modes = self._model.k_cutoff(pca_variance_captured)
-        self._b_max = 3 * ((self._model.eigenvalues()[0:self._modes]) ** 0.5)
+        self._model = ModedPCAModel(self._aligned_shapes.raw(), pca_variance_captured)
 
     def aligned_shapes(self):
+        """
+        Returns the gpa aligned shapes
+        :return: A list of Shape objects containing the aligned shapes
+        """
         return self._aligned_shapes.shapes()
 
     def mean_shape(self):
@@ -51,7 +51,7 @@ class ActiveShapeModel:
         Returns the number of modes of the model
         :return: the number of modes
         """
-        return self._modes
+        return self._model.modes()
 
     def generate_shape(self, factors):
         """
@@ -62,18 +62,17 @@ class ActiveShapeModel:
         between -1 and 1
         :return: A Shape object containing the generated shape
         """
-        p = self._model.eigenvectors()[:, 0:self._modes]
-        pb = np.dot(p, factors * self._b_max)
-        return Shape(self.mean_shape().raw() + Shape.from_collapsed_shape(pb).raw())
+        return Shape(
+            self.mean_shape().raw() + Shape.from_collapsed_shape(self._model.generate_deviation(factors)).raw())
 
     def mode_shapes(self, m):
         """
         Returns the modal shapes of the model (Variance limits)
         :param m: A list of Shape objects containing the modal shapes
         """
-        if m < 0 or m >= self._modes:
+        if m < 0 or m >= self.modes():
             raise ValueError('Number of modes must be within [0,modes()-1]')
-        factors = np.zeros(self._modes)
+        factors = np.zeros(self.modes())
         mode_shapes = []
         for i in range(-1, 2):
             factors[m] = i

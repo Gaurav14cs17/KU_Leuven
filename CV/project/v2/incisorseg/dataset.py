@@ -82,8 +82,12 @@ class Dataset:
                             str(image_index + 1).zfill(2) + '-' + str(tooth_index) + '.png')
 
     def _build_image_filepath(self, image_index):
-        segmentations_filepath_prefix = os.path.join(self._data_folder, 'Radiographs')
-        return os.path.join(segmentations_filepath_prefix, str(image_index + 1).zfill(2) + '.tif')
+        radiograph_filepath_prefix = os.path.join(self._data_folder, 'Radiographs')
+        return os.path.join(radiograph_filepath_prefix, str(image_index + 1).zfill(2) + '.tif')
+
+    def _build_extra_image_filepath(self, image_index):
+        radiograph_filepath_prefix = os.path.join(self._data_folder, os.path.join('Radiographs', 'extra'))
+        return os.path.join(radiograph_filepath_prefix, str(image_index + 1).zfill(2) + '.tif')
 
     def _process_tooth_landmarks(self, image_index, tooth_index, width):
         original_landmark = load_landmark(self._build_landmark_filepath(image_index, tooth_index))
@@ -101,6 +105,12 @@ class Dataset:
         _, width = original_image.shape
         mirrored_image = cv2.flip(original_image, 1)
         return original_image, mirrored_image, width
+
+    def _read_extra_images(self):
+        self._extra_images = []
+        for image_index in range(self._test_image_count):
+            self._extra_images.append(
+                load_image(self._build_extra_image_filepath(image_index + self._training_image_count)))
 
     def _read_training_data(self):
         for image_index in range(self._training_image_count):
@@ -131,6 +141,12 @@ class Dataset:
             mirrored_images.append(self._training_images_mirrored[image_index])
             images.append(self._training_images[image_index])
         return images, mirrored_images
+
+    def get_extra_images(self, image_indices):
+        images = []
+        for image_index in image_indices:
+            images.append(self._extra_images[image_index])
+        return images
 
     def get_training_image_segmentations(self, image_indices, tooth_indices, combine=False):
         segmentations = []
@@ -206,3 +222,4 @@ class Dataset:
         self._training_segmentations_mirrored = []
         self._data_folder = data_folder
         self._read_training_data()
+        self._read_extra_images()

@@ -106,8 +106,8 @@ class PCAModel:
         Use the fitted model to project a set of points
         :param x: The data that has to be projected.
          Defaults to the data used to fit the model.
-        :param k: The number of prinicipal components to be used.
-        Defaults to all the prinicipal components.
+        :param k: The number of principal components to be used.
+        Defaults to all the principal components.
         :return: The matrix of projections of the input data
         """
         _, d = self._x.shape
@@ -135,3 +135,59 @@ class PCAModel:
         if y is None:
             y = self.project(k)
         return np.dot(self._w[0:k], y.T) + self._mean
+
+
+class ModedPCAModel:
+    """ A Moded Principal Component Analysis Model to perform
+        dimensionality reduction. Implementation is based on
+
+        Cootes, Tim, E. R. Baldock, and J. Graham.
+        "An introduction to active shape models."
+        Image processing and analysis (2000): 223-248.
+
+        Attributes:
+        _model  The underlying PCA Model
+        _modes The number of modes of the model
+        _bmax The limits of variation of the shape model
+
+        Authors: David Torrejon and Bharath Venkatesh
+
+    """
+
+    def __init__(self, x, pca_variance_captured=0.9):
+        """
+        Constructs the Active Shape Model based on the given list of Shapes.
+        :param x: The data matrix
+        :param pca_variance_captured: The fraction of variance to be captured by the moded model
+        """
+        self._model = PCAModel(x)
+        self._modes = self._model.k_cutoff(pca_variance_captured)
+        self._b_max = 3 * ((self._model.eigenvalues()[0:self._modes]) ** 0.5)
+
+    def mean(self):
+        """
+        Returns the mean
+        :return: A vector containing the model mean
+        """
+        return self._model.mean()
+
+    def modes(self):
+        """
+        Returns the number of modes of the model
+        :return: the number of modes
+        """
+        return self._modes
+
+    def generate_deviation(self, factors):
+        """
+        Generates the deviation to be added to the mean based
+        on a vector of factors of size equal to the number of
+        modes of the model, with element
+        values between -1 and 1
+        :param factors: A vector of size modes() with values
+        between -1 and 1
+        :return: A vector containing the generated point
+        """
+        p = self._model.eigenvectors()[:, 0:self._modes]
+        pb = np.dot(p, factors * self._b_max)
+        return pb
