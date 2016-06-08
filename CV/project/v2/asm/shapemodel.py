@@ -4,7 +4,7 @@ from asm.pca import ModedPCAModel
 from asm.shape import AlignedShapeList, Shape
 
 
-class ActiveShapeModel:
+class ShapeModel:
     """ An Active Shape Model based on
     Cootes, Tim, E. R. Baldock, and J. Graham.
     "An introduction to active shape models."

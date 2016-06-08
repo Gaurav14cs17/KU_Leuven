@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 
 class Shape:
@@ -127,9 +128,20 @@ class Shape:
         return np.reshape(self._data, 2 * n)
 
     def add(self, other):
+        """
+        Returns a new shape combining the points in other and the current shape
+        :param other: The  other shape
+        :return: A shape containing all the points in the current and other shapes
+        """
         return Shape(np.concatenate((self._data, other.raw())))
 
     def get_neighborhood(self, point_index, num_neighbors):
+        """
+        Returns the neighborhood around a given point.
+        :param point_index: The index of the query point in the shape
+        :param num_neighbors: The number of neighborhood points needed ON EITHER SIDE
+        :return: An array of neighborhood points
+        """
         if 0 <= point_index < self.size():
             neighborhood_index_increments = range(-num_neighbors, 0, 1) + range(1, num_neighbors + 1, 1)
             neighborhood_indices = [(point_index + incr) % self.size() for incr in neighborhood_index_increments]
@@ -137,12 +149,49 @@ class Shape:
         return np.array([])
 
     def get_point(self, point_index):
+        """
+        Returns the point at the given index
+        :param point_index:  The index of the query point in the shape
+        :return: A 2D array containing the point coordinated
+        """
         if 0 <= point_index < self.size():
             return self._data[point_index]
         return np.array([])
 
-    def pyrDown(self):
-        return Shape(np.round(self.raw()/2))
+    def pyr_down(self):
+        """
+        Returns a new shape with the coordinates scaled down by 2
+        :return: A shape object
+        """
+        return Shape(np.round(self.raw() / 2))
+
+    def scale(self, factor):
+        """
+        Returns the current shape scaled by the factor
+        :param factor: the scaling factor
+        :return: A shape object containing the scaled shape
+        """
+        return Shape(factor * self._data)
+
+    def translate(self, displacement):
+        """
+        Returns the current shape translated by the specified displacement vector
+        :param displacement: The 2d vector of displacements
+        :return: A shape object containing the displaced shape
+        """
+        return Shape(self._data + displacement)
+
+    def rotate(self, theta_in_radians):
+        """
+        Returns the current shape rotated by theta radians
+        :param theta_in_radians: The rotation angle in radians
+        :return: A shape object containing the rotated shape
+        """
+        rotation = np.array(
+            [[math.cos(theta_in_radians), -math.sin(theta_in_radians)],
+             [math.sin(theta_in_radians), math.cos(theta_in_radians)]])
+        return Shape(np.dot(self._data, rotation))
+
 
 class AlignedShapeList:
     """

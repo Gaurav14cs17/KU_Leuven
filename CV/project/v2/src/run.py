@@ -44,7 +44,7 @@ import cv2
 from incisorseg.dataset import Dataset
 from incisorseg.utils import *
 from asm.shape import Shape
-from asm.shapemodel import ActiveShapeModel
+from asm.shapemodel import ShapeModel
 
 def get_point_normal_pixel_coordinates(shape,point_index,nn,npx):
     point = shape.get_point(point_index)
